@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+# Node
+node_modules/
+dist/
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Backend specific
+backend/uploads/*
+!backend/uploads/listing_template.csv
+
+# Airflow
+airflow/logs/
+airflow/airflow.db
+airflow/*.pid
