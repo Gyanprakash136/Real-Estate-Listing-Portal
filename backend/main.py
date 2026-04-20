@@ -9,10 +9,10 @@ from models import user, listing, inquiry  # noqa: ensure models are registered
 
 from routers import auth, listings, search, inquiries, admin, chat
 
-# ─── Create Tables ────────────────────────────────────────────────
+# Create Tables
 Base.metadata.create_all(bind=engine)
 
-# ─── App ──────────────────────────────────────────────────────────
+# App
 app = FastAPI(
     title=settings.app_name,
     version="1.0.0",
@@ -41,11 +41,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ─── Static Files (uploads) ───────────────────────────────────────
+# Static Files (uploads)
 os.makedirs(settings.upload_dir, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")
 
-# ─── Routers ──────────────────────────────────────────────────────
+# Routers
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(listings.router, prefix="/listings", tags=["Listings"])
 app.include_router(search.router, prefix="/search", tags=["Search"])

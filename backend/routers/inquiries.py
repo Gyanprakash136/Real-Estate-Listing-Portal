@@ -14,7 +14,7 @@ from kafka.producer import kafka_producer
 router = APIRouter()
 
 
-# ─── Pydantic Schemas ─────────────────────────────────────────────
+# Pydantic Schemas
 class InquiryCreate(BaseModel):
     listing_id: str
     message: str
@@ -44,7 +44,7 @@ def inquiry_to_dict(inq: Inquiry) -> dict:
     }
 
 
-# ─── Submit Inquiry (customer) ────────────────────────────────────
+# Submit Inquiry (customer)
 @router.post("/", status_code=201)
 def submit_inquiry(
     payload: InquiryCreate,
@@ -89,7 +89,7 @@ def submit_inquiry(
     return inquiry_to_dict(inquiry)
 
 
-# ─── Get Customer's Own Inquiries ─────────────────────────────────
+# Get Customer's Own Inquiries
 @router.get("/my")
 def get_my_inquiries(
     current_user: User = Depends(require_role(UserRole.customer)),
@@ -104,7 +104,7 @@ def get_my_inquiries(
     return [inquiry_to_dict(i) for i in inquiries]
 
 
-# ─── Get Client's Received Inquiries ──────────────────────────────
+# Get Client's Received Inquiries
 @router.get("/received")
 def get_received_inquiries(
     current_user: User = Depends(require_role(UserRole.client)),
@@ -120,7 +120,7 @@ def get_received_inquiries(
     return [inquiry_to_dict(i) for i in inquiries]
 
 
-# ─── Update Inquiry Status (client) ──────────────────────────────
+# Update Inquiry Status (client)
 @router.put("/{inquiry_id}/status")
 def update_inquiry_status(
     inquiry_id: str,

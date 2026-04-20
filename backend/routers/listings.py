@@ -17,7 +17,7 @@ from config import settings
 router = APIRouter()
 
 
-# ─── Response Schemas ─────────────────────────────────────────────
+# Response Schemas
 class ListingResponse(BaseModel):
     id: str
     client_id: str
@@ -94,7 +94,7 @@ def compute_fingerprint(address: str, price: float) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
-# ─── Create Listing ───────────────────────────────────────────────
+# Create Listing
 @router.post("/", status_code=201)
 def create_listing(
     title: str = Form(...),
@@ -178,7 +178,7 @@ def create_listing(
     return listing_to_response(listing)
 
 
-# ─── Get All Active Listings ──────────────────────────────────────
+# Get All Active Listings
 @router.get("/")
 def get_listings(
     skip: int = 0,
@@ -197,7 +197,7 @@ def get_listings(
     }
 
 
-# ─── Get My Listings (client) ─────────────────────────────────────
+# Get My Listings (client)
 @router.get("/my")
 def get_my_listings(
     current_user: User = Depends(require_role(UserRole.client)),
@@ -212,7 +212,7 @@ def get_my_listings(
     return [listing_to_response(l) for l in listings]
 
 
-# ─── Get Single Listing ───────────────────────────────────────────
+# Get Single Listing
 @router.get("/{listing_id}")
 def get_listing(
     listing_id: str,
@@ -235,7 +235,7 @@ def get_listing(
     return listing_to_response(listing, include_client_name=True)
 
 
-# ─── Update Listing ───────────────────────────────────────────────
+# Update Listing
 @router.put("/{listing_id}")
 def update_listing(
     listing_id: str,
@@ -280,7 +280,7 @@ def update_listing(
     return listing_to_response(listing)
 
 
-# ─── Delete Listing ───────────────────────────────────────────────
+# Delete Listing
 @router.delete("/{listing_id}")
 def delete_listing(
     listing_id: str,
@@ -297,7 +297,7 @@ def delete_listing(
     return {"message": "Listing deleted successfully."}
 
 
-# ─── Upload Additional Images ─────────────────────────────────────
+# Upload Additional Images
 @router.post("/{listing_id}/images")
 def upload_images(
     listing_id: str,
@@ -339,7 +339,7 @@ def upload_images(
     return {"images": existing}
 
 
-# ─── Mark as Sold ────────────────────────────────────────────────
+# Mark as Sold
 class MarkSoldRequest(BaseModel):
     sold_price: float
 

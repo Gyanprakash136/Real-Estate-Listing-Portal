@@ -6,6 +6,8 @@
 [![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-000?style=for-the-badge&logo=apachekafka&logoColor=white)](https://kafka.apache.org/)
 [![Apache Airflow](https://img.shields.io/badge/Apache%20Airflow-017CEE?style=for-the-badge&logo=apacheairflow&logoColor=white)](https://airflow.apache.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://render.com/)
+[![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com/)
 
 **RealEstate.io** is a premium, full-stack real estate marketplace engineered for high-scale property management and market intelligence. It bridges the gap between traditional real estate transactions and modern data science by implementing a robust, event-driven architecture and automated analytical workflows.
 
@@ -17,11 +19,11 @@ The platform is built on a distributed microservices pattern, prioritizing high 
 
 ```mermaid
 graph TD
-    subgraph "Client Layer"
+    subgraph "Client Layer (Vercel)"
         SPA[React 18 SPA]
     end
 
-    subgraph "API & Event Ingress"
+    subgraph "API & Event Ingress (Render)"
         API[FastAPI Gateway]
         K_PROD[Kafka Producer]
     end
@@ -60,26 +62,88 @@ graph TD
 
 ---
 
+## 📊 Database Entity-Relationship (ER) Schema
+
+The OLTP database is designed in PostgreSQL to handle high-concurrency transactions, user messaging, and raw data ingestion.
+
+```mermaid
+erDiagram
+    users {
+        UUID id PK
+        VARCHAR email
+        VARCHAR password_hash
+        ENUM role
+        VARCHAR full_name
+        BOOLEAN is_active
+    }
+    
+    raw_listings {
+        UUID id PK
+        VARCHAR kafka_topic
+        JSONB payload
+        BOOLEAN processed
+    }
+
+    listings {
+        UUID id PK
+        UUID client_id FK
+        VARCHAR title
+        NUMERIC price
+        ENUM property_type
+        ENUM status
+    }
+
+    inquiries {
+        UUID id PK
+        UUID listing_id FK
+        UUID customer_id FK
+        TEXT message
+        ENUM status
+    }
+    
+    chat_rooms {
+        UUID id PK
+        UUID listing_id FK
+        BOOLEAN is_active
+    }
+
+    chat_messages {
+        UUID id PK
+        UUID room_id FK
+        UUID sender_id FK
+        TEXT content
+    }
+
+    %% Relationships
+    users ||--o{ listings : "creates"
+    raw_listings ||--o| listings : "populates"
+    users ||--o{ inquiries : "submits"
+    listings ||--o{ inquiries : "receives"
+    users ||--o{ chat_rooms : "participates in"
+    listings ||--o{ chat_rooms : "associated with"
+    chat_rooms ||--o{ chat_messages : "contains"
+    users ||--o{ chat_messages : "sends"
+```
+
+---
+
 ## 🧬 Data Engineering Foundations
 
-This project serves as a showcase for core **Data Engineering (DE)** principles applied to a real-world production environment:
+This project serves as a showcase for core **Data Engineering (DE)** principles applied to a real-world production environment. It successfully implements **18 out of 30 Advanced Data Engineering concepts**, intentionally trading legacy Big Data tools (Hadoop) for a **Modern Data Stack**.
 
-### 1. Event-Driven Architecture (EDA)
-Instead of direct database writes for critical actions, the system utilizes **Apache Kafka** as a central nervous system. Every listing creation, view, or inquiry is emitted as a structured **Avro event**, ensuring decoupled systems and high fault tolerance.
+### 1. Event-Driven Architecture (EDA) & Streaming
+Instead of direct database writes for critical actions, the system utilizes **Apache Kafka** as a central nervous system. Every listing creation or inquiry is emitted as a structured **Avro event** validated by a **Confluent Schema Registry**, ensuring decoupled systems and strict data quality.
 
-### 2. Idempotency & Data Quality
-Duplicate listings are a common pain point in real estate. The **Deduplication DAG** utilizes cryptographic fingerprinting (SHA-256) of property attributes to ensure that "raw" ingestion data is sanitized and unique before being promoted to the public marketplace.
-
-### 3. Scalable Orchestration & ETL
+### 2. Scalable Orchestration & ETL
 Leveraging **Apache Airflow**, the system manages complex dependencies through directed acyclic graphs (DAGs). 
+- **ETL Pipelines**: Extracts data from Postgres, transforms it via external logic, and loads it back.
 - **Enrichment**: Hourly tasks compute architectural metrics (Price/Sqft) and neighborhood health scores.
-- **State Management**: Automated flagging of "stale" listings ensures market freshness.
 
-### 4. Transactional to Analytical (OLAP)
-Raw event streams are "rolled up" daily into high-performance analytical tables. This allows the platform to serve complex business intelligence (Sales Velocity, Negotiated Deltas) without impacting the performance of the transactional database.
+### 3. Data Ingestion & Idempotency
+The system supports **Bulk CSV Ingestion** via the Admin dashboard. To prevent duplicate listings, the pipeline utilizes cryptographic fingerprinting (SHA-256) of property attributes to ensure that raw ingestion data is sanitized and unique before being promoted to the public marketplace.
 
-### 5. Machine Learning Lifecycle (MLOps Bridge)
-The system treats "Sales" not just as transactions, but as **ground-truth labels**. By capturing the delta between List Price and Sold Price, the platform provides a one-click **ML Export Pipeline** to feed high-quality data into valuation models.
+### 4. Cloud Infrastructure & Networking
+The platform is fully containerized using **Docker** and deployed across modern cloud providers. The React frontend is served via a global CDN on **Vercel**, while the FastAPI backend and PostgreSQL database are hosted on **Render**, communicating over secure internal networks.
 
 ---
 
@@ -92,31 +156,20 @@ The system treats "Sales" not just as transactions, but as **ground-truth labels
 
 ---
 
-## 🛠️ Technical Stack
-
-- **Frontend**: React 18, Vite, Tailwind-inspired Vanilla CSS, Leaflet.js, Framer Motion.
-- **Backend**: FastAPI, SQLAlchemy (Asynchronous support), Pydantic.
-- **Streaming**: Confluent Kafka, Avro Serialization.
-- **Orchestration**: Airflow 2.8 (Celery Executor ready).
-- **Database**: PostgreSQL 15 (Relational storage with JSONB for flexible amenities).
-
----
-
 ## 🚀 Deployment
 
 The entire ecosystem is containerized for seamless scaling and reproducible environments.
 
+### Local Development (Docker Compose)
 ```bash
-# Start the full infrastructure
-docker-compose up -d
-
-# Backend Setup
-cd backend && pip install -r requirements.txt
-uvicorn main:app --reload
-
-# Frontend Setup
-cd frontend && npm install && npm run dev
+# Start the full infrastructure (Postgres, Kafka, Zookeeper, Airflow, Backend, Frontend)
+docker-compose up -d --build
 ```
+
+### Production Cloud Deployment
+- **Frontend**: Deployed as a Static Site on Vercel (`vercel.json` configured for SPA routing).
+- **Backend**: Deployed as a Dockerized Web Service on Render.
+- **Database**: Managed PostgreSQL instance on Render.
 
 ---
 

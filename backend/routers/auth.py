@@ -17,7 +17,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
-# ─── Pydantic Schemas ─────────────────────────────────────────────
+# Pydantic Schemas
 class RegisterRequest(BaseModel):
     email: EmailStr
     password: str
@@ -57,7 +57,7 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
-# ─── Helpers ──────────────────────────────────────────────────────
+# Helpers
 def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
@@ -104,7 +104,7 @@ def require_role(role: UserRole):
     return role_checker
 
 
-# ─── Routes ───────────────────────────────────────────────────────
+# Routes
 @router.post("/register", response_model=LoginResponse, status_code=201)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     existing = db.query(User).filter(User.email == payload.email).first()
