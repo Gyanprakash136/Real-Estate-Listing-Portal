@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+from typing import Optional
 
 
 class Settings(BaseSettings):
@@ -11,6 +12,10 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str
+
+    # Frontend
+    vite_api_url: Optional[str] = None
+    frontend_url: Optional[str] = None
 
     # Kafka
     kafka_bootstrap_servers: str = "kafka:29092"
