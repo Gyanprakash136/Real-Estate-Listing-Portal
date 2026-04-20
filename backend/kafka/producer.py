@@ -73,6 +73,8 @@ class KafkaProducer:
             logger.info(f"Message delivered to {msg.topic()} [{msg.partition()}] @ offset {msg.offset()}")
 
     def _publish(self, topic: str, schema_dict: dict, data: dict, key: str = None):
+        logger.warning(f"Kafka is disabled. Skipping message to {topic}")
+        return
         try:
             producer = self._get_producer()
             serializer = self._get_serializer(topic, schema_dict)
